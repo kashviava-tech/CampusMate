@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusMate AI</title>
+<style>
+  :root{
+    --lav-50:#f8f6fc; --lav-100:#f3effa; --lav-200:#e9e2f5; --lav-300:#d9cdf0;
+    --purple:#8b6fc9; --purple-deep:#6a4fb0; --purple-dark:#4d3784;
+    --blue:#5b8fd9; --blue-deep:#4a7cc4;
+    --ink:#322a4a; --muted:#8a83a3;
+    --white:#fff;
+    --r-lg:22px; --r-md:16px; --r-sm:10px;
+    --shadow:0 8px 28px rgba(110,90,170,.10);
+    --shadow-lg:0 14px 44px rgba(110,90,170,.16);
+    --grad-hero:linear-gradient(120deg,#6a4fb0 0%,#8b6fc9 55%,#5b8fd9 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--lav-100);color:var(--ink);line-height:1.55;font-size:15px;
+  }
+  button{font-family:inherit}
+
+  /* ===== App shell ===== */
+  .app{display:flex;min-height:100vh}
+
+  /* ===== Sidebar ===== */
+  .sidebar{
+    width:236px;flex-shrink:0;background:var(--white);
+    padding:26px 16px;display:flex;flex-direction:column;gap:6px;
+    position:sticky;top:0;height:100vh;z-index:50;
+    box-shadow:4px 0 24px rgba(110,90,170,.06);
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:0 10px 22px}
+  .brand-logo{
+    width:40px;height:40px;border-radius:12px;background:var(--grad-hero);
+    display:flex;align-items:center;justify-content:center;font-size:1.15rem;
+    box-shadow:0 6px 14px rgba(122,95,190,.35);
+  }
+  .brand h1{font-size:1.05rem;font-weight:700;color:var(--purple-dark);letter-spacing:.2px}
+  .brand small{display:block;font-size:.66rem;color:var(--muted);font-weight:500}
+  .nav-label{font-size:.66rem;font-weight:700;letter-spacing:1.6px;color:#b6aed0;padding:14px 12px 6px}
+  .nav-btn{
+    display:flex;align-items:center;gap:11px;width:100%;
+    border:none;background:none;cursor:pointer;text-align:left;
+    padding:11px 13px;border-radius:14px;font-size:.92rem;font-weight:600;
+    color:#6f6790;transition:all .18s;
+  }
+  .nav-btn:hover{background:var(--lav-100)}
+  .nav-btn.active{background:var(--grad-hero);color:#fff;box-shadow:0 8px 18px rgba(122,95,190,.32)}
+  .nav-btn .ico{font-size:1.05rem;width:22px;text-align:center}
+  .nav-btn .badge{
+    margin-left:auto;background:#ef5a7b;color:#fff;font-size:.68rem;font-weight:700;
+    border-radius:20px;padding:1px 8px;
+  }
+  .nav-btn.active .badge{background:rgba(255,255,255,.28)}
+  .sidebar-foot{margin-top:auto;padding:0 6px}
+  .user-chip{
+    display:flex;align-items:center;gap:10px;background:var(--lav-100);
+    border-radius:14px;padding:10px 12px;
+  }
+  .avatar{
+    width:34px;height:34px;border-radius:50%;background:var(--grad-hero);
+    color:#fff;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;
+  }
+  .user-chip b{font-size:.82rem;display:block}
+  .user-chip span{font-size:.7rem;color:var(--muted)}
+
+  /* ===== Main ===== */
+  .main{flex:1;min-width:0;padding:26px 30px 60px;max-width:1240px;margin:0 auto}
+  .view{display:none;animation:fadein .3s}
+  .view.active{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .view-head{margin-bottom:20px}
+  .view-head h2{font-size:1.45rem;color:var(--purple-dark)}
+  .view-head p{color:var(--muted);font-size:.9rem}
+
+  .card{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px}
+  .grid{display:grid;gap:16px}
+  .g-2{grid-template-columns:1fr 1fr}
+  .g-3{grid-template-columns:2fr 1fr}
+  .g-stats{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:1060px){.g-stats{grid-template-columns:repeat(2,1fr)}.g-3{grid-template-columns:1fr}}
+  @media(max-width:760px){.g-2{grid-template-columns:1fr}.main{padding:18px 14px 60px}}
+
+  /* ===== Dashboard hero ===== */
+  .hero{
+    background:var(--grad-hero);border-radius:var(--r-lg);color:#fff;
+    padding:26px 28px;margin-bottom:18px;position:relative;overflow:hidden;
+    box-shadow:var(--shadow-lg);
+  }
+  .hero::after{content:"";position:absolute;right:-70px;top:-70px;width:230px;height:230px;
+    border-radius:50%;background:rgba(255,255,255,.12)}
+  .hero::before{content:"";position:absolute;right:40px;bottom:-90px;width:170px;height:170px;
+    border-radius:50%;background:rgba(255,255,255,.08)}
+  .hero h2{font-size:1.65rem;font-weight:700}
+  .hero p{opacity:.92;font-size:.92rem;margin-top:2px}
+  .hero .sem-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1}
+  .hero .sem-chips span{
+    background:rgba(255,255,255,.18);backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,.25);border-radius:20px;
+    padding:5px 14px;font-size:.78rem;font-weight:600;
+  }
+
+  /* ===== AI assistant ===== */
+  .ai-card{
+    background:var(--white);border-radius:var(--r-lg);padding:0;margin-bottom:18px;
+    box-shadow:var(--shadow-lg);overflow:hidden;border:1.5px solid var(--lav-200);
+  }
+  .ai-head{
+    background:linear-gradient(120deg,rgba(139,111,201,.14),rgba(91,143,217,.12));
+    padding:16px 22px;display:flex;align-items:center;gap:12px;
+  }
+  .ai-orb{
+    width:42px;height:42px;border-radius:50%;background:var(--grad-hero);
+    display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+    box-shadow:0 0 0 5px rgba(139,111,201,.16),0 8px 16px rgba(122,95,190,.3);
+    animation:pulse 2.6s infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 5px rgba(139,111,201,.16)}50%{box-shadow:0 0 0 10px rgba(139,111,201,.08)}}
+  .ai-head h3{font-size:1.02rem;color:var(--purple-dark)}
+  .ai-head p{font-size:.78rem;color:var(--muted)}
+  .ai-body{padding:18px 22px 22px}
+  .ai-input-row{display:flex;gap:10px}
+  .ai-input-row textarea{
+    flex:1;border:1.5px solid var(--lav-200);border-radius:14px;
+    padding:12px 14px;font-size:.92rem;font-family:inherit;background:var(--lav-50);
+    resize:vertical;min-height:64px;outline:none;
+  }
+  .ai-input-row textarea:focus{border-color:var(--purple);background:#fff}
+  .ai-send{
+    background:var(--grad-hero);color:#fff;border:none;border-radius:14px;
+    padding:0 22px;font-weight:700;font-size:.9rem;cursor:pointer;align-self:stretch;
+  }
+  .ai-send:hover{filter:brightness(1.06)}
+  .ai-quick{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .chip{
+    background:var(--lav-100);border:1.5px solid var(--lav-200);color:var(--purple-deep);
+    border-radius:20px;padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .chip:hover{background:var(--lav-200);transform:translateY(-1px)}
+  .ai-reply{
+    margin-top:14px;background:var(--lav-50);border-left:4px solid var(--purple);
+    border-radius:12px;padding:14px 16px;font-size:.9rem;display:none;white-space:pre-line;
+  }
+  .ai-reply.show{display:block;animation:fadein .25s}
+  .ai-reply b{color:var(--purple-deep)}
+
+  /* ===== Stats ===== */
+  .stat{display:flex;align-items:center;gap:13px}
+  .stat .s-ico{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+  .stat .s-ico.p{background:var(--lav-200)}
+  .stat .s-ico.b{background:#e3eefb}
+  .stat .s-ico.g{background:#e6f4ea}
+  .stat .s-ico.o{background:#fdeee0}
+  .stat b{font-size:1.4rem;display:block;line-height:1.1}
+  .stat span{font-size:.78rem;color:var(--muted)}
+
+  /* ===== Bars / chart ===== */
+  .bar{background:#e9e3f4;border-radius:8px;height:9px;overflow:hidden}
+  .bar div{background:var(--grad-hero);height:100%;border-radius:8px;transition:width .5s}
+  .mini-chart{display:flex;align-items:flex-end;gap:9px;height:110px;padding-top:8px}
+  .mini-chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .mini-chart .col i{
+    width:100%;max-width:26px;border-radius:8px 8px 4px 4px;
+    background:linear-gradient(180deg,var(--purple),var(--lav-300));display:block;transition:height .5s;
+  }
+  .mini-chart .col.today i{background:linear-gradient(180deg,var(--blue-deep),#bcd4f2)}
+  .mini-chart .col span{font-size:.68rem;color:var(--muted);font-weight:600}
+  .ring{--p:0;width:74px;height:74px;border-radius:50%;
+    background:conic-gradient(var(--purple) calc(var(--p)*1%),var(--lav-200) 0);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ring::before{content:attr(data-label);width:54px;height:54px;border-radius:50%;background:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:var(--purple-deep)}
+
+  /* ===== Deadline rows ===== */
+  .dl-row{
+    display:flex;align-items:center;gap:12px;background:var(--lav-50);
+    border-left:4px solid var(--purple);border-radius:12px;padding:11px 14px;margin-bottom:10px;
+  }
+  .dl-row.urgent{border-left-color:#ef5a7b;background:#fdf3f6}
+  .dl-row.today{border-left-color:#e8a13c}
+  .dl-date{
+    background:#fff;border-radius:9px;padding:6px 10px;text-align:center;
+    font-size:.68rem;color:var(--purple-deep);font-weight:700;min-width:62px;
+  }
+  .dl-date strong{display:block;font-size:1rem}
+  .dl-info{flex:1;min-width:0}
+  .dl-info h4{font-size:.9rem;font-weight:600}
+  .dl-info p{font-size:.76rem;color:var(--muted)}
+  .tag{font-size:.68rem;padding:3px 10px;border-radius:20px;font-weight:700;white-space:nowrap}
+  .tag.class{background:#e3eefb;color:var(--blue-deep)}
+  .tag.due{background:var(--lav-200);color:var(--purple-deep)}
+  .tag.session{background:#efe9fb;color:var(--purple)}
+  .dl-del{background:none;border:none;color:#c8c1dc;cursor:pointer;font-size:.95rem;padding:2px 4px}
+  .dl-del:hover{color:#ef5a7b}
+
+  /* ===== Forms ===== */
+  label{display:block;font-size:.76rem;font-weight:700;color:var(--purple-deep);margin:12px 0 5px;letter-spacing:.2px}
+  input[type=text],input[type=number],input[type=date],textarea,select{
+    width:100%;border:1.5px solid var(--lav-200);border-radius:12px;
+    padding:10px 13px;font-size:.9rem;font-family:inherit;background:var(--lav-50);
+    color:var(--ink);outline:none;
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--purple);background:#fff}
+  textarea{resize:vertical}
+  .btn{
+    background:var(--grad-hero);color:#fff;border:none;border-radius:12px;
+    padding:10px 20px;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:14px;
+    box-shadow:0 6px 14px rgba(122,95,190,.25);
+  }
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:var(--lav-100);color:var(--purple-deep);box-shadow:none;border:1.5px solid var(--lav-200)}
+  .btn.blue{background:linear-gradient(120deg,var(--blue),var(--blue-deep));box-shadow:0 6px 14px rgba(74,124,196,.25)}
+  .btn.small{padding:6px 14px;font-size:.78rem;margin-top:0}
+  .inline-form{display:flex;gap:10px;flex-wrap:wrap}
+  .inline-form>div{flex:1;min-width:130px}
+
+  /* ===== Checklist ===== */
+  .sum-box{
+    background:linear-gradient(120deg,var(--lav-100),#eef2fc);border-radius:14px;
+    padding:15px 17px;font-size:.88rem;margin-bottom:15px;display:none;
+  }
+  .sum-box.show{display:block;animation:fadein .25s}
+  .sum-box h4{color:var(--purple-deep);font-size:.8rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .sum-box ul{margin:6px 0 0 16px}
+  .sum-box li{margin-bottom:3px}
+  .pill-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+  .req-pill{background:#fff;border:1.5px solid var(--lav-300);color:var(--purple-deep);
+    border-radius:20px;padding:4px 12px;font-size:.74rem;font-weight:600}
+  .req-pill.crit{border-color:#f2c1d0;color:#c2446a;background:#fdf3f6}
+  .req-pill.deliv{border-color:#bcd4f2;color:var(--blue-deep);background:#f0f6fd}
+  .check-item{
+    display:flex;align-items:center;gap:11px;background:var(--lav-50);
+    border-radius:12px;padding:11px 13px;margin-bottom:9px;font-size:.88rem;
+    transition:box-shadow .15s;
+  }
+  .check-item:hover{box-shadow:var(--shadow)}
+  .check-item input{accent-color:var(--purple);width:17px;height:17px;flex-shrink:0}
+  .check-item .est{margin-left:auto;font-size:.68rem;color:var(--muted);background:#fff;
+    padding:2px 9px;border-radius:20px;border:1px solid var(--lav-200);white-space:nowrap}
+  .check-item .del{background:none;border:none;color:#c8c1dc;cursor:pointer;font-size:.9rem;padding:0 2px}
+  .check-item .del:hover{color:#ef5a7b}
+  .check-item.done .txt{text-decoration:line-through;color:var(--muted)}
+  .check-item .txt{min-width:0}
+
+  /* ===== Planner ===== */
+  .plan-day{margin-bottom:14px}
+  .plan-day h4{font-size:.85rem;color:var(--purple-deep);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .plan-day h4 .day-badge{background:var(--grad-hero);color:#fff;border-radius:9px;padding:3px 11px;font-size:.72rem}
+  .block{
+    display:flex;align-items:center;gap:12px;background:var(--lav-50);
+    border-radius:11px;padding:9px 13px;margin-bottom:7px;font-size:.86rem;
+  }
+  .block .time{font-weight:700;color:var(--blue-deep);font-size:.78rem;min-width:88px}
+  .block.free{opacity:.55;font-style:italic}
+  .block .why{margin-left:auto;font-size:.7rem;color:var(--muted)}
+  .focus-banner{
+    background:var(--grad-hero);color:#fff;border-radius:16px;padding:16px 20px;margin-bottom:16px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .focus-banner .fo-ico{font-size:1.5rem}
+  .focus-banner h4{font-size:.72rem;text-transform:uppercase;letter-spacing:1.4px;opacity:.85}
+  .focus-banner p{font-size:.98rem;font-weight:600}
+
+  /* ===== Group ===== */
+  .group-item{display:flex;align-items:center;gap:11px;background:var(--lav-50);border-radius:12px;padding:10px 13px;margin-bottom:9px;font-size:.88rem}
+  .group-item .who{background:var(--lav-200);color:var(--purple-deep);border-radius:20px;padding:3px 11px;font-size:.72rem;font-weight:700;white-space:nowrap}
+  .group-item .status{margin-left:auto;font-size:.7rem;padding:4px 12px;border-radius:20px;background:#e3eefb;color:var(--blue-deep);border:none;cursor:pointer;font-weight:700;white-space:nowrap}
+  .group-item .status.done{background:#e6f4ea;color:#3d8c57}
+  .group-item .del{background:none;border:none;color:#c8c1dc;cursor:pointer}
+  .group-item .del:hover{color:#ef5a7b}
+
+  /* ===== Timetable editor ===== */
+  .tt-row{display:flex;gap:9px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  .tt-row select,.tt-row input{width:auto;flex:1;min-width:70px}
+  .tt-row .rm{background:none;border:none;color:#c8c1dc;cursor:pointer;font-size:1rem}
+  .tt-row .rm:hover{color:#ef5a7b}
+
+  /* ===== Quick actions ===== */
+  .qa-row{display:flex;gap:12px;flex-wrap:wrap}
+  .qa{
+    flex:1;min-width:170px;background:var(--white);border:1.5px dashed var(--lav-300);
+    border-radius:var(--r-md);padding:14px 16px;cursor:pointer;text-align:left;
+    font-size:.86rem;font-weight:600;color:var(--purple-deep);transition:all .15s;
+  }
+  .qa:hover{border-style:solid;background:var(--lav-50);transform:translateY(-2px);box-shadow:var(--shadow)}
+  .qa .ico{font-size:1.2rem;display:block;margin-bottom:4px}
+  .qa span{font-size:.72rem;color:var(--muted);font-weight:500;display:block}
+
+  .muted-note{font-size:.76rem;color:var(--muted);margin-top:8px}
+  footer{max-width:1240px;margin:0 auto;padding:0 30px 26px;font-size:.74rem;color:var(--muted)}
+
+  /* ===== Mobile ===== */
+  .menu-btn{display:none}
+  @media(max-width:900px){
+    .sidebar{
+      position:fixed;left:-260px;transition:left .25s;height:100vh;
+    }
+    .sidebar.open{left:0}
+    .menu-btn{
+      display:flex;position:fixed;top:14px;right:14px;z-index:60;
+      width:44px;height:44px;border-radius:13px;border:none;background:#fff;
+      box-shadow:var(--shadow-lg);font-size:1.15rem;cursor:pointer;align-items:center;justify-content:center;
+    }
+    .main{padding-top:64px}
+  }
+  .scrim{display:none;position:fixed;inset:0;background:rgba(50,42,74,.35);z-index:40}
+  .scrim.show{display:block}
+</style>
+</head>
+<body>
+
+<button class="menu-btn" onclick="toggleSidebar(true)" title="Menu">☰</button>
+<div class="scrim" id="scrim" onclick="toggleSidebar(false)"></div>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">🎓</div>
+      <div><h1>CampusMate AI</h1><small>Your smart study companion</small></div>
+    </div>
+    <div class="nav-label">MAIN</div>
+    <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')"><span class="ico">🏠</span> Dashboard</button>
+    <button class="nav-btn" data-view="assignments" onclick="showView('assignments')"><span class="ico">📝</span> Assignments <span class="badge" id="nav-asg-badge"></span></button>
+    <button class="nav-btn" data-view="planner" onclick="showView('planner')"><span class="ico">📅</span> Study Planner</button>
+    <button class="nav-btn" data-view="group" onclick="showView('group')"><span class="ico">👥</span> Group Projects <span class="badge" id="nav-grp-badge"></span></button>
+    <div class="nav-label">ACCOUNT</div>
+    <button class="nav-btn" data-view="settings" onclick="showView('settings')"><span class="ico">⚙️</span> Settings</button>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar" id="sb-avatar">AR</div>
+        <div><b id="sb-name">Aina Rahman</b><span id="sb-sub">Semester 4</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+
+    <!-- ========== DASHBOARD ========== -->
+    <section class="view active" id="view-dashboard">
+      <div class="hero" id="hero">
+        <h2 id="welcome-title">Good evening, Aina! 👋</h2>
+        <p id="welcome-sub">Here's what needs your attention this week.</p>
+        <div class="sem-chips" id="sem-chips"></div>
+      </div>
+
+      <!-- AI assistant — main highlight -->
+      <div class="ai-card">
+        <div class="ai-head">
+          <div class="ai-orb">✨</div>
+          <div>
+            <h3>CampusMate AI Assistant</h3>
+            <p>Ask anything, paste an assignment brief, or let me plan your week</p>
+          </div>
+        </div>
+        <div class="ai-body">
+          <div class="ai-input-row">
+            <textarea id="ai-input" placeholder="e.g. Paste your assignment brief here, or ask: what should I focus on this week?"></textarea>
+            <button class="ai-send" onclick="aiSubmit()">Ask ✦</button>
+          </div>
+          <div class="ai-quick">
+            <button class="chip" onclick="aiQuick('plan')">🗓 Plan my study week</button>
+            <button class="chip" onclick="aiQuick('first')">🎯 What should I do first?</button>
+            <button class="chip" onclick="aiQuick('deadlines')">⏰ My upcoming deadlines</button>
+            <button class="chip" onclick="aiQuick('group')">👥 How is my group doing?</button>
+          </div>
+          <div class="ai-reply" id="ai-reply"></div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid g-stats" style="margin-bottom:18px">
+        <div class="card stat"><div class="s-ico p">📚</div><div><b id="st-asg">0</b><span>Active assignments</span></div></div>
+        <div class="card stat"><div class="s-ico b">✅</div><div><b id="st-tasks">0/0</b><span>Tasks completed</span></div></div>
+        <div class="card stat"><div class="s-ico o">⏰</div><div><b id="st-next">—</b><span>Next deadline in</span></div></div>
+        <div class="card stat"><div class="s-ico g">⏱</div><div><b id="st-hours">0h</b><span>Study time planned</span></div></div>
+      </div>
+
+      <div class="grid g-3" style="margin-bottom:18px">
+        <!-- deadlines -->
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:12px">📅 Upcoming deadlines & classes</h3>
+          <div id="dash-deadlines"></div>
+          <details style="margin-top:12px">
+            <summary style="font-size:.85rem;font-weight:700;color:var(--purple-deep);cursor:pointer">＋ Add a new deadline or class</summary>
+            <div class="inline-form">
+              <div><label>What</label><input type="text" id="dl-title" placeholder="e.g. Linear Algebra quiz 2"></div>
+              <div><label>Date</label><input type="date" id="dl-date"></div>
+              <div style="max-width:170px"><label>Type</label>
+                <select id="dl-type">
+                  <option value="due">Assignment due</option>
+                  <option value="class">Class</option>
+                  <option value="session">Practical / lab</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn small" onclick="addDeadline()">Add to dashboard</button>
+          </details>
+        </div>
+        <!-- productivity -->
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:8px">📈 Weekly productivity</h3>
+          <div style="display:flex;align-items:center;gap:18px;margin-bottom:8px">
+            <div class="ring" id="prog-ring" data-label="0%"></div>
+            <div style="font-size:.82rem;color:var(--muted)">
+              <b style="color:var(--ink);font-size:.95rem" id="prog-line">0 of 0 tasks done</b><br>
+              across all assignment checklists
+            </div>
+          </div>
+          <div class="mini-chart" id="prod-chart"></div>
+          <p class="muted-note">Tasks completed per day (last 7 days) — updates as you tick things off.</p>
+        </div>
+      </div>
+
+      <!-- Quick access -->
+      <div class="qa-row">
+        <button class="qa" onclick="showView('assignments');setTimeout(()=>document.getElementById('asg-brief').focus(),80)"><span class="ico">📝</span> Add & break down an assignment<span>Paste a brief → get a task list</span></button>
+        <button class="qa" onclick="showView('planner');setTimeout(generatePlan,80)"><span class="ico">🗓</span> Generate my study plan<span>Based on deadlines & timetable</span></button>
+        <button class="qa" onclick="showView('group')"><span class="ico">👥</span> Organise group work<span>Assign & track group tasks</span></button>
+        <button class="qa" onclick="showView('settings')"><span class="ico">🎓</span> Update my profile<span>University, modules & timetable</span></button>
+      </div>
+    </section>
+
+    <!-- ========== ASSIGNMENTS ========== -->
+    <section class="view" id="view-assignments">
+      <div class="view-head">
+        <h2>📝 Assignment Manager</h2>
+        <p>Let the AI engine read your brief and turn it into a clear, prioritised task list.</p>
+      </div>
+      <div class="grid g-2">
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:6px">Assignment brief</h3>
+          <label>Assignment title</label>
+          <input type="text" id="asg-title">
+          <label>Paste or type your brief here</label>
+          <textarea id="asg-brief" style="min-height:180px"></textarea>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" onclick="analyseBrief()">✨ Analyse with AI</button>
+            <button class="btn ghost" onclick="loadSampleBrief()">Load sample brief</button>
+          </div>
+          <p class="muted-note">The engine runs fully offline on your device — it detects requirements, objectives, deliverables, word counts, deadlines and marking criteria. No data leaves your browser.</p>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:10px">AI summary & task checklist</h3>
+          <div class="sum-box" id="summary-box"></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div class="ring" id="asg-ring" data-label="0%" style="--p:0;width:56px;height:56px;font-size:.7rem"></div>
+            <div style="font-size:.82rem;color:var(--muted)" id="asg-prog-line"></div>
+          </div>
+          <div id="checklist"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <input type="text" id="task-input" placeholder="Add your own task...">
+            <button class="btn small" onclick="addManualTask()">＋ Add</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PLANNER ========== -->
+    <section class="view" id="view-planner">
+      <div class="view-head">
+        <h2>📅 Study Planner</h2>
+        <p>A personalised weekly schedule built from your deadlines, modules, timetable and available study time.</p>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="grid g-2" style="gap:20px">
+          <div>
+            <div class="focus-banner" style="margin-bottom:0">
+              <div class="fo-ico">🎯</div>
+              <div><h4>This week's AI focus</h4><p id="focus-text"></p></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+              <input type="text" id="focus-input" placeholder="Or set your own focus..." style="flex:1;min-width:200px">
+              <button class="btn small" style="align-self:center" onclick="updateFocus()">Set focus</button>
+            </div>
+          </div>
+          <div>
+            <label>Available study hours per day</label>
+            <input type="number" id="hours-input" min="0" max="12" step="0.5">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn blue" onclick="generatePlan()">🔄 Generate my study plan</button>
+              <button class="btn ghost" onclick="saveHoursAndPlan()">Save hours & regenerate</button>
+            </div>
+            <p class="muted-note">The planner avoids your class timetable (edit it in Settings) and prioritises the nearest deadlines first.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="plan-output"></div>
+    </section>
+
+    <!-- ========== GROUP ========== -->
+    <section class="view" id="view-group">
+      <div class="view-head">
+        <h2>👥 Group Projects</h2>
+        <p>Divide the work, assign teammates and track progress together.</p>
+      </div>
+      <div class="grid g-2">
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:6px" id="grp-title">Project</h3>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div class="ring" id="grp-ring" data-label="0%" style="width:60px;height:60px"></div>
+            <span style="font-size:.84rem;color:var(--muted)" id="grp-prog-line"></span>
+          </div>
+          <div class="inline-form">
+            <div style="flex:2"><label>New group task</label><input type="text" id="gt-desc" placeholder="e.g. Design survey questions"></div>
+            <div style="max-width:150px"><label>Assign to</label>
+              <select id="gt-member">
+                <option>Aina</option><option>Wei Jie</option><option>Dhinesh</option><option>Sofia</option><option>Me</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn small" onclick="assignGroupTask()">＋ Assign task</button>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:10px">Task board</h3>
+          <div id="group-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SETTINGS ========== -->
+    <section class="view" id="view-settings">
+      <div class="view-head">
+        <h2>⚙️ Settings & Profile</h2>
+        <p>Your profile powers the dashboard welcome and the personalised study planner.</p>
+      </div>
+      <div class="grid g-2">
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:4px">🎓 Student profile</h3>
+          <label>Your name</label><input type="text" id="pf-name">
+          <label>University</label><input type="text" id="pf-uni">
+          <label>Programme</label><input type="text" id="pf-prog">
+          <label>Semester</label><input type="text" id="pf-sem" placeholder="e.g. Semester 4, 2026/27">
+          <label>Modules (comma separated)</label><input type="text" id="pf-modules" placeholder="Calculus II, Statistics, ...">
+          <button class="btn" onclick="saveProfile()">💾 Save profile</button>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin-bottom:4px">🗓 Class timetable</h3>
+          <p class="muted-note" style="margin:0 0 10px">Used by the study planner so it never schedules revision during class.</p>
+          <div id="tt-rows"></div>
+          <button class="btn small ghost" onclick="addTimetableRow()">＋ Add class slot</button>
+          <h3 style="color:var(--purple-dark);font-size:1.02rem;margin:18px 0 4px">Data</h3>
+          <p class="muted-note" style="margin:0 0 8px">Everything is saved on this device (browser localStorage). Nothing is sent anywhere.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn small ghost" onclick="exportData()">⬇ Export backup</button>
+            <button class="btn small ghost" style="color:#c2446a" onclick="resetData()">🗑 Reset to sample data</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<footer>CampusMate AI — runs entirely in your browser. All AI analysis is offline and on-device; no account, backend or payments involved.</footer>
+
+<script>
+/* ================================================================
+   CampusMate AI — single-file app
+   Data model persisted in localStorage key "campusmateAI.v2"
+================================================================ */
+const STORE_KEY = "campusmateAI.v2";
+const $ = id => document.getElementById(id);
+const todayISO = () => new Date().toISOString().slice(0,10);
+const daysUntil = d => Math.round((new Date(d+"T00:00:00") - new Date(todayISO()+"T00:00:00")) / 86400000);
+
+/* ---------- Seed (never opens empty) ---------- */
+function seedData(){
+  const d = n => { const t=new Date(); t.setDate(t.getDate()+n); return t.toISOString().slice(0,10); };
+  return {
+    profile:{
+      name:"Aina Rahman", uni:"Universiti Malaya",
+      prog:"BSc Computer Science (Data Analytics)",
+      sem:"Semester 4 · 2026/27",
+      modules:["Calculus II","Statistics","Programming with Python","Pengajian Malaysia","English 2"],
+      hoursPerDay:3
+    },
+    timetable:[
+      {day:"Mon", start:"09:00", end:"11:00", module:"Calculus II"},
+      {day:"Tue", start:"14:00", end:"16:00", module:"Statistics"},
+      {day:"Wed", start:"10:00", end:"12:00", module:"Programming with Python"},
+      {day:"Thu", start:"09:00", end:"10:00", module:"Pengajian Malaysia"}
+    ],
+    deadlines:[
+      {title:"Statistics quiz 2 (hypothesis testing)", date:d(3), type:"due"},
+      {title:"Calculus II tutorial set 10 due", date:d(6), type:"due"},
+      {title:"Python lab session — Makmal K1", date:d(1), type:"session"},
+      {title:"Pengajian Malaysia lecture — DK 2", date:d(2), type:"class"}
+    ],
+    assignments:[{
+      title:"Group Report — Sustainable Campus Waste (English 2)",
+      brief:"Write a 2,500-word report on waste management at the university canteen. Your objective is to evaluate the current situation and propose realistic improvements. The report must include an introduction, a current situation analysis, three improvement proposals, and a survey section with at least 10 respondents. Deliverables: the written report and a 10-slide presentation. Marking criteria: content and analysis 40%, survey design 20%, structure and language 25%, references 15%. Submit via e-Learning by Friday, Week 11.",
+      checklist:[
+        {text:"Re-read the brief and note the marking criteria", done:true},
+        {text:"Draft introduction (200–300 words)", done:false},
+        {text:"Write current situation analysis of canteen waste", done:false},
+        {text:"Prepare and run survey with 10+ respondents", done:false},
+        {text:"Write three improvement proposals", done:false},
+        {text:"Build 10-slide presentation", done:false},
+        {text:"Compile references (APA style) and proofread", done:false}
+      ]
+    }],
+    activeAssignment:0,
+    groupProject:{ name:"Sustainable Campus Waste report (English 2)",
+      tasks:[
+        {desc:"Survey design & data collection", who:"Aina", done:false},
+        {desc:"Current situation analysis (canteen)", who:"Wei Jie", done:true},
+        {desc:"Three improvement proposals", who:"Dhinesh", done:false},
+        {desc:"Presentation slides", who:"Sofia", done:false}
+      ]},
+    /* completions: real activity log — seeded across the past week so the chart is alive on first open */
+    completions: (()=>{ const a=[]; [1,2,2,3,4,5,5].forEach(off=>{const t=new Date();t.setDate(t.getDate()-off);a.push(t.toISOString())}); return a; })(),
+    focus:"", plan:[]
+  };
+}
+
+/* ---------- Persistence ---------- */
+let state;
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    state = raw ? JSON.parse(raw) : seedData();
+    if(!raw) localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }catch(e){ state = seedData(); }
+}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+function logCompletion(){ state.completions.push(new Date().toISOString()); save(); }
+
+/* ---------- Router ---------- */
+function showView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  $("view-"+name).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.view===name));
+  toggleSidebar(false);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function toggleSidebar(open){
+  $("sidebar").classList.toggle("open", open);
+  $("scrim").classList.toggle("show", open);
+}
+
+/* ================================================================
+   AI ENGINE (offline, rule-based NLP — swap point for a real LLM)
+   analyseBriefText() is the single integration seam: to use a real
+   model later, replace its body with an API call to a small backend.
+================================================================ */
+const AIEngine = {
+  classify(sentence){
+    const s = sentence.toLowerCase();
+    if(/\b(marking criteria|marked|weighted?|marks? (are|is)|worth \d+|%\s*(of|weight)|rubric|graded)/.test(s)) return "criteria";
+    if(/\b(deliverable|submit|hand in|hand-in|upload|presentation|slides|report|essay|poster|video|portfolio|artifact)\b/.test(s)) return "deliverable";
+    if(/\b(objective|aim|purpose|goal|this assignment will|you will|explore|evaluate|analyse|analyze|demonstrate)\b/.test(s)) return "objective";
+    if(/\b(must|required|requirement|include|should|at least|minimum|format|font|spacing|referenc|citation|word|pages?|respondent|appendix)\b/.test(s)) return "requirement";
+    return "info";
+  },
+  extract(text){
+    const t = text;
+    const out = {words:0, lengthHint:null, deadlineHints:[], submission:null, sections:[], criteria:[], deliverables:[], objectives:[], requirements:[]};
+    const wc = t.match(/\b([\d,]+)\s*[- ]?\s*(word|words)\b/i);
+    if(wc){ out.lengthHint = wc[1]+" words"; out.words = parseInt(wc[1].replace(/,/g,"")) || 0; }
+    const pg = t.match(/\b(\d+)\s*[- ]?\s*(page|pages|slides?|slides)\b/i);
+    if(pg) out.sections.push({label:pg[0], type:"deliverable"});
+
+    // deadlines: weekday names, "week N", dd/mm, "by <date>"
+    (t.match(/\b(by|due|before|deadline)[^.,;]{0,40}/gi)||[]).forEach(m=>{
+      const frag = m.trim();
+      const day = frag.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
+      const wk  = frag.match(/\bweek\s*(\d+)\b/i);
+      const dm  = frag.match(/\b(\d{1,2}[\/.-]\d{1,2}([\/.-]\d{2,4})?)\b/);
+      if(day) out.deadlineHints.push("Submit by " + day[1][0].toUpperCase()+day[1].slice(1).toLowerCase());
+      else if(wk) out.deadlineHints.push("Due in Week " + wk[1]);
+      else if(dm) out.deadlineHints.push("Due " + dm[1]);
+    });
+    if(/e-?learning|portal|turnitin|moodle|google classroom|blackboard|lms/i.test(t))
+      out.submission = "Online submission (e-Learning / LMS) — check the portal for the exact link";
+    else if(/hard ?copy|printed|physical/i.test(t))
+      out.submission = "Hard copy submission";
+
+    // sentence-level analysis
+    const sentences = t.split(/(?<=[.!?])\s+|(?<=:)\s+(?=[A-Z])/).map(s=>s.trim()).filter(s=>s.length>8);
+    const sectionLabels = [];
+    sentences.forEach(s=>{
+      const cls = this.classify(s);
+      const clean = s.replace(/^[-•*\d.)\s]+/,"");
+      if(cls==="criteria"){
+        // split "content 40%, structure 25%, references 15%" into named components
+        const comps = s.match(/[a-z][a-z &'/-]{2,40}?\s*\d+\s*%/gi);
+        if(comps && comps.length){
+          comps.forEach(c=>{
+            const nm = c.replace(/\s*\d+\s*%\s*$/,"").replace(/^[,\s]+/,"").trim();
+            const pc = c.match(/\d+\s*%/);
+            if(nm) out.criteria.push({text: nm[0].toUpperCase()+nm.slice(1)+" — "+pc[0]});
+          });
+        } else {
+          const pct = s.match(/\d+\s*%/g);
+          const name = s.split(/[:;]/)[0].replace(/marking criteria|marks?:?/i,"").trim();
+          out.criteria.push({text:(name||"Component") + (pct? " — " + pct.join(", "):"")});
+        }
+      } else if(cls==="deliverable"){
+        if(/\bsubmit\b|e-?learning|portal/i.test(s)) return; // submission handled separately
+        out.deliverables.push(clean.length>90? clean.slice(0,88)+"…":clean);
+      } else if(cls==="objective"){
+        out.objectives.push(clean.length>90? clean.slice(0,88)+"…":clean);
+      } else if(cls==="requirement"){
+        out.requirements.push(clean.length>90? clean.slice(0,88)+"…":clean);
+      }
+      // known academic sections
+      ["introduction","literature review","methodology","situation analysis","analysis",
+       "proposal","recommendation","survey","conclusion","abstract","appendix",
+       "references","bibliography","discussion"].forEach(k=>{
+        if(new RegExp("\\b"+k,"i").test(s) && !sectionLabels.some(x=>x.toLowerCase()===k))
+          sectionLabels.push(k[0].toUpperCase()+k.slice(1));
+      });
+    });
+    out.sections = sectionLabels;
+    return out;
+  },
+  buildTasks(x){
+    const tasks = [];
+    const est = n => n>2500?"~3–4 hrs": n>1000?"~2 hrs":"~1 hr";
+    tasks.push({text:"Re-read the brief and highlight every requirement & criterion", est:"~30 min", done:false});
+    if(x.lengthHint) tasks.push({text:"Plan the structure to hit "+x.lengthHint, est:"~30 min", done:false});
+    x.sections.forEach(s=>tasks.push({text:"Draft: "+s, est:est(x.words), done:false}));
+    x.deliverables.slice(0,3).forEach(d=>tasks.push({text:"Prepare deliverable: "+d, est:"~1–2 hrs", done:false}));
+    if(x.criteria.length){
+      tasks.push({text:"Self-check against marking criteria: "+x.criteria.map(c=>c.text).join(" · "), est:"~30 min", done:false});
+    }
+    if(!x.sections.length && !x.deliverables.length)
+      tasks.push({text:"Draft the main body of the assignment", est:est(x.words), done:false});
+    tasks.push({text:"Proofread, format and submit"+(x.submission?" ("+x.submission.split(" —")[0].toLowerCase()+")":""), est:"~1 hr", done:false});
+    return tasks;
+  },
+  summarise(title, x, briefWords){
+    let s = `<h4>AI brief summary</h4>`;
+    s += `<b>${title||"Untitled assignment"}</b> — analysed from ${briefWords} words of brief text.`;
+    const facts = [];
+    if(x.lengthHint) facts.push("📏 Length: <b>"+x.lengthHint+"</b>");
+    if(x.deadlineHints.length) facts.push("⏰ "+x.deadlineHints.join(" · "));
+    if(x.submission) facts.push("📮 "+x.submission);
+    if(facts.length) s += "<div class='pill-row'>"+facts.map(f=>`<span class='req-pill'>${f}</span>`).join("")+"</div>";
+    if(x.objectives.length)
+      s += `<p style="margin-top:9px"><b>Objective:</b> ${x.objectives[0]}</p>`;
+    if(x.deliverables.length)
+      s += `<p style="margin-top:6px"><b>Deliverables (${x.deliverables.length}):</b></p><ul>${x.deliverables.slice(0,4).map(d=>"<li>"+d+"</li>").join("")}</ul>`;
+    if(x.criteria.length)
+      s += `<div class="pill-row">${x.criteria.map(c=>`<span class="req-pill crit">📊 ${c.text}</span>`).join("")}</div>`;
+    return s;
+  }
+};
+
+/* ---------- Assignment Manager ---------- */
+function activeAssignment(){ return state.assignments[state.activeAssignment] || state.assignments[0]; }
+
+function loadSampleBrief(){
+  const a = activeAssignment();
+  $("asg-title").value = a.title;
+  $("asg-brief").value = a.brief;
+}
+function analyseBrief(){
+  const title = $("asg-title").value.trim();
+  const brief = $("asg-brief").value.trim();
+  const box = $("summary-box");
+  if(!brief){ box.innerHTML="<h4>AI brief summary</h4>Paste a brief above and press <b>Analyse with AI</b> ✨"; box.classList.add("show"); return; }
+  const x = AIEngine.extract(brief);
+  box.innerHTML = AIEngine.summarise(title, x, brief.split(/\s+/).length);
+  box.classList.add("show");
+  const tasks = AIEngine.buildTasks(x);
+  const a = activeAssignment();
+  a.title = title || a.title;
+  a.brief = brief;
+  a.checklist = tasks;
+  a.lastAnalysis = {criteria:x.criteria.length, deliverables:x.deliverables.length, hints:x.deadlineHints};
+  save(); renderChecklist();
+}
+function renderChecklist(){
+  const list = activeAssignment().checklist;
+  $("checklist").innerHTML = list.map((t,i)=>`
+    <div class="check-item ${t.done?"done":""}">
+      <input type="checkbox" ${t.done?"checked":""} onchange="toggleCheck(${i})">
+      <span class="txt">${t.text}</span>
+      ${t.est?`<span class="est">${t.est}</span>`:""}
+      <button class="del" onclick="delTask(${i})" title="Remove">✕</button>
+    </div>`).join("");
+  const done = list.filter(c=>c.done).length;
+  const pct = list.length? Math.round(done/list.length*100):0;
+  const ring = $("asg-ring");
+  ring.style.setProperty("--p",pct); ring.dataset.label = pct+"%";
+  $("asg-prog-line").innerHTML = `<b style="color:var(--ink)">${done} of ${list.length} tasks done</b><br>estimated work: ${list.filter(t=>!t.done).reduce((s,t)=>s+(t.est?parseInt(t.est.replace(/\D/g,""))||1:1),0)} hrs remaining`;
+  renderDashStats();
+}
+function toggleCheck(i){
+  const list = activeAssignment().checklist;
+  list[i].done = !list[i].done;
+  if(list[i].done) logCompletion();
+  save(); renderChecklist();
+}
+function delTask(i){ activeAssignment().checklist.splice(i,1); save(); renderChecklist(); }
+function addManualTask(){
+  const v = $("task-input").value.trim(); if(!v) return;
+  activeAssignment().checklist.push({text:v, done:false});
+  $("task-input").value=""; save(); renderChecklist();
+}
+
+/* ---------- Deadlines ---------- */
+function addDeadline(){
+  const title = $("dl-title").value.trim(); if(!title) return;
+  const date = $("dl-date").value || todayISO();
+  state.deadlines.push({title, date, type:$("dl-type").value});
+  $("dl-title").value=""; $("dl-date").value="";
+  state.deadlines.sort((a,b)=>a.date.localeCompare(b.date));
+  save(); renderDeadlines(); renderDashStats();
+}
+function delDeadline(i){ state.deadlines.splice(i,1); save(); renderDeadlines(); renderDashStats(); }
+function renderDeadlines(){
+  const tags = {due:["due","Due"], class:["class","Class"], session:["session","Session"]};
+  $("dash-deadlines").innerHTML = state.deadlines.map((dl,i)=>{
+    const du = daysUntil(dl.date);
+    const cls = du<=1?"today": du<=3?"urgent":"";
+    const [tg,label]=tags[dl.type]||tags.due;
+    const when = du<0? "past": du===0? "Today!": du===1? "Tomorrow": "in "+du+" days";
+    const dt = new Date(dl.date+"T00:00:00");
+    return `<div class="dl-row ${cls}">
+      <div class="dl-date">${dt.toLocaleDateString("en-MY",{day:"numeric",month:"short"})}<strong>${dt.toLocaleDateString("en-MY",{weekday:"short"})}</strong></div>
+      <div class="dl-info"><h4>${dl.title}</h4><p>${when}</p></div>
+      <span class="tag ${tg}">${label}</span>
+      <button class="dl-del" onclick="delDeadline(${i})" title="Remove">✕</button>
+    </div>`;
+  }).join("");
+}
+
+/* ---------- Study planner ---------- */
+function buildPlan(){
+  const hours = Math.max(0, parseFloat(state.profile.hoursPerDay)||3);
+  const dls = state.deadlines.filter(d=>d.type==="due" && daysUntil(d.date)>=0)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const plan = [];
+  for(let i=0;i<7;i++){
+    const day = new Date(); day.setDate(day.getDate()+i);
+    const dayName = day.toLocaleDateString("en-MY",{weekday:"short"});
+    const iso = day.toISOString().slice(0,10);
+    const classes = state.timetable.filter(c=>c.day===dayName.toLowerCase().slice(0,3) || c.day===dayName);
+    const busy = classes.reduce((s,c)=>{
+      const [sh,sm]=c.start.split(":").map(Number), [eh,em]=c.end.split(":").map(Number);
+      return s + (eh*60+em-sh*60-sm)/60;
+    },0);
+    let free = Math.max(0, hours - busy);
+    const blocks = [];
+    classes.forEach(c=>blocks.push({time:c.start+"–"+c.end, text:"🏫 "+c.module+" (class)", free:false}));
+    // slice free time into study blocks of ~1.5h after class end (or 18:00 default)
+    let cursor = classes.length? classes[classes.length-1].end : "18:00";
+    let [ch,cm] = cursor.split(":").map(Number);
+    let mins = ch*60+cm;
+    let di = 0;
+    while(free >= 0.75 && di < dls.length + 2){
+      const dl = dls[Math.min(di, Math.max(0,dls.length-1))];
+      if(!dl && di>=dls.length) break;
+      const du = daysUntil(dl.date);
+      const dur = Math.min(free, 1.5);
+      const endM = mins + Math.round(dur*60);
+      const mod = guessModule(dl.title);
+      const topic = mod
+        ? dl.title.replace(new RegExp(mod.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").split(" ")[0]+"[\\s:–-]*","i"),"").trim() || dl.title
+        : dl.title;
+      blocks.push({
+        time: fmt(mins)+"–"+fmt(endM),
+        text: "📖 "+(mod? mod+" — ":"") + topic.replace(/\s*\(.*?\)\s*$/,""),
+        free:false,
+        why: du<=3? "urgent · due in "+du+"d": "due in "+du+"d"
+      });
+      mins = endM + 15; free -= dur; di++;
+    }
+    if(!blocks.length) blocks.push({time:"—", text:"Free day — rest or catch up on reading 🌿", free:true});
+    plan.push({iso, label: day.toLocaleDateString("en-MY",{weekday:"long", day:"numeric", month:"short"}), today:i===0, blocks});
+  }
+  return plan;
+}
+function guessModule(title){
+  const m = (state.profile.modules||[]).find(mod=>{
+    const key = mod.split(" ")[0].toLowerCase();
+    return key.length>3 && title.toLowerCase().includes(key);
+  });
+  return m || null;
+}
+const fmt = m => String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+
+function generatePlan(){
+  state.plan = buildPlan();
+  // focus = nearest due deadline's module/topic
+  const dls = state.deadlines.filter(d=>d.type==="due" && daysUntil(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date));
+  if(dls.length){
+    const mod = guessModule(dls[0].title);
+    state.focus = (mod? mod+": ":"") + dls[0].title + " — due in " + daysUntil(dls[0].date) + " days";
+  }
+  save(); renderPlanner();
+  return state.plan;
+}
+function renderPlanner(){
+  $("focus-text").textContent = state.focus || "No deadlines yet — add one to get a focus.";
+  $("hours-input").value = state.profile.hoursPerDay;
+  $("plan-output").innerHTML = state.plan.length? state.plan.map(day=>`
+    <div class="plan-day">
+      <h4><span class="day-badge">${day.today?"TODAY":"UPCOMING"}</span> ${day.label}</h4>
+      ${day.blocks.map(b=>`<div class="block ${b.free?"free":""}">
+        <span class="time">${b.time}</span><span>${b.text}</span>
+        ${b.why?`<span class="why">${b.why}</span>`:""}
+      </div>`).join("")}
+    </div>`).join("") : `<p class="muted-note">Press <b>Generate my study plan</b> to build your week.</p>`;
+}
+function updateFocus(){
+  const v = $("focus-input").value.trim(); if(!v) return;
+  state.focus = v; save(); renderPlanner();
+}
+function saveHoursAndPlan(){
+  const h = parseFloat($("hours-input").value);
+  if(!isNaN(h) && h>=0){ state.profile.hoursPerDay = h; save(); }
+  generatePlan();
+}
+
+/* ---------- Group ---------- */
+function assignGroupTask(){
+  const desc = $("gt-desc").value.trim(); if(!desc) return;
+  state.groupProject.tasks.push({desc, who:$("gt-member").value, done:false});
+  $("gt-desc").value=""; save(); renderGroup(); renderDashStats();
+}
+function toggleGroup(i){ state.groupProject.tasks[i].done=!state.groupProject.tasks[i].done; save(); renderGroup(); renderDashStats(); }
+function delGroup(i){ state.groupProject.tasks.splice(i,1); save(); renderGroup(); renderDashStats(); }
+function renderGroup(){
+  const tasks = state.groupProject.tasks;
+  $("grp-title").textContent = "🗂 " + state.groupProject.name;
+  $("group-list").innerHTML = tasks.map((t,i)=>`
+    <div class="group-item">
+      <span class="who">${t.who}</span>
+      <span style="text-decoration:${t.done?"line-through":"none"};${t.done?"color:var(--muted)":""}">${t.desc}</span>
+      <button class="status ${t.done?"done":""}" onclick="toggleGroup(${i})">${t.done?"Done ✓":"In progress"}</button>
+      <button class="del" onclick="delGroup(${i})" title="Remove">✕</button>
+    </div>`).join("");
+  const done = tasks.filter(t=>t.done).length;
+  const pct = tasks.length? Math.round(done/tasks.length*100):0;
+  const ring = $("grp-ring");
+  ring.style.setProperty("--p",pct); ring.dataset.label = pct+"%";
+  $("grp-prog-line").innerHTML = `<b style="color:var(--ink)">${done} of ${tasks.length} tasks done</b><br>${tasks.length-done} open across the team`;
+  const open = tasks.length-done;
+  $("nav-grp-badge").textContent = open; $("nav-grp-badge").style.display = open? "":"none";
+}
+
+/* ---------- Profile / settings ---------- */
+function renderProfile(){
+  const p = state.profile;
+  $("pf-name").value=p.name; $("pf-uni").value=p.uni; $("pf-prog").value=p.prog;
+  $("pf-sem").value=p.sem; $("pf-modules").value=(p.modules||[]).join(", ");
+  renderTimetableRows();
+  $("sb-name").textContent = p.name;
+  $("sb-sub").textContent = p.sem;
+  $("sb-avatar").textContent = p.name.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+}
+function saveProfile(){
+  const p = state.profile;
+  p.name=$("pf-name").value.trim()||p.name; p.uni=$("pf-uni").value.trim();
+  p.prog=$("pf-prog").value.trim(); p.sem=$("pf-sem").value.trim();
+  p.modules=$("pf-modules").value.split(",").map(s=>s.trim()).filter(Boolean);
+  save(); renderProfile(); renderHero();
+}
+function renderTimetableRows(){
+  $("tt-rows").innerHTML = state.timetable.map((r,i)=>`
+    <div class="tt-row">
+      <select onchange="ttUpd(${i},'day',this.value)">
+        ${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<option ${r.day===d?"selected":""}>${d}</option>`).join("")}
+      </select>
+      <input type="text" value="${r.start}" placeholder="09:00" onchange="ttUpd(${i},'start',this.value)">
+      <input type="text" value="${r.end}" placeholder="11:00" onchange="ttUpd(${i},'end',this.value)">
+      <input type="text" value="${r.module}" placeholder="Module" style="flex:1.6" onchange="ttUpd(${i},'module',this.value)">
+      <button class="rm" onclick="ttDel(${i})">✕</button>
+    </div>`).join("");
+}
+function ttUpd(i,k,v){ state.timetable[i][k]=v; save(); }
+function ttDel(i){ state.timetable.splice(i,1); save(); renderTimetableRows(); }
+function addTimetableRow(){ state.timetable.push({day:"Mon",start:"09:00",end:"10:00",module:""}); save(); renderTimetableRows(); }
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "campusmate-backup.json"; a.click();
+}
+function resetData(){
+  if(!confirm("Reset everything back to the sample data? Your saved entries will be lost.")) return;
+  state = seedData(); save(); renderAll();
+}
+
+/* ---------- Dashboard ---------- */
+function renderHero(){
+  const p = state.profile;
+  const h = new Date().getHours();
+  const greet = h<12? "Good morning": h<17? "Good afternoon":"Good evening";
+  $("welcome-title").textContent = `${greet}, ${p.name.split(" ")[0]}! 👋`;
+  const next = state.deadlines.filter(d=>daysUntil(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  $("welcome-sub").textContent = next
+    ? `Next up: ${next.title} (${daysUntil(next.date)===0?"today":"in "+daysUntil(next.date)+" day"+(daysUntil(next.date)===1?"":"s")}). Here's your week at a glance.`
+    : "You're all caught up — enjoy the breathing room 🌿";
+  $("sem-chips").innerHTML = [p.uni, p.prog, p.sem, (p.modules||[]).length+" modules"]
+    .filter(Boolean).map(s=>`<span>${s}</span>`).join("");
+}
+function renderDashStats(){
+  const asg = activeAssignment();
+  const tasks = asg.checklist;
+  const done = tasks.filter(t=>t.done).length;
+  $("st-asg").textContent = state.assignments.length;
+  $("st-tasks").textContent = done+"/"+tasks.length;
+  const next = state.deadlines.filter(d=>d.type==="due"&&daysUntil(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  $("st-next").textContent = next? (daysUntil(next.date)===0?"Today":daysUntil(next.date)+" day"+(daysUntil(next.date)===1?"":"s")) : "—";
+  const planned = state.plan.reduce((s,day)=>s+day.blocks.filter(b=>b.text.startsWith("📖")).length*1.5,0);
+  $("st-hours").textContent = (planned? planned+"h" : (state.profile.hoursPerDay*7)+"h max");
+  // dashboard ring
+  const pct = tasks.length? Math.round(done/tasks.length*100):0;
+  const ring = $("prog-ring");
+  ring.style.setProperty("--p",pct); ring.dataset.label = pct+"%";
+  $("prog-line").innerHTML = `<b style="color:var(--ink)">${done} of ${tasks.length} tasks done</b><br>in “${asg.title.slice(0,44)}${asg.title.length>44?"…":""}”`;
+  const open = tasks.length-done;
+  $("nav-asg-badge").textContent = open; $("nav-asg-badge").style.display = open? "":"none";
+}
+function renderProdChart(){
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    days.push({
+      label: d.toLocaleDateString("en-MY",{weekday:"narrow"}),
+      count: state.completions.filter(c=>c.slice(0,10)===key).length,
+      today: i===0
+    });
+  }
+  const max = Math.max(1, ...days.map(d=>d.count));
+  $("prod-chart").innerHTML = days.map(d=>`
+    <div class="col ${d.today?"today":""}">
+      <i style="height:${Math.max(6, d.count/max*100)}%" title="${d.count} task${d.count===1?"":"s"}"></i>
+      <span>${d.label}</span>
+    </div>`).join("");
+}
+
+/* ---------- AI assistant ---------- */
+function aiSubmit(){ aiAnswer($("ai-input").value); }
+function aiQuick(kind){ aiAnswer(kind); }
+function aiAnswer(q){
+  const box = $("ai-reply");
+  const t = (q||"").toLowerCase();
+  let html = "";
+  const dls = state.deadlines.filter(d=>daysUntil(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date));
+  const tasks = activeAssignment().checklist.filter(c=>!c.done);
+
+  if(q==="plan" || /\b(plan|schedule|week|revision|study time)\b/.test(t)){
+    const plan = generatePlan();
+    showView("planner");
+    html = `🗓 <b>Done — I've built your personalised 7-day plan.</b>\nIt uses your ${state.profile.hoursPerDay}h/day study budget, skips your timetable classes, and works on the nearest deadline first.`;
+    const total = plan.reduce((s,d)=>s+d.blocks.filter(b=>b.text.startsWith("📖")).length,0);
+    html += `\n\nThat's <b>${total} study block${total===1?"":"s"}</b> this week. Open the Study Planner tab to see and tweak it.`;
+  }
+  else if(q==="first" || /\b(first|what should i do|priorit|focus|next step)\b/.test(t)){
+    if(tasks.length && dls.length){
+      html = `🎯 <b>My recommendation: start here.</b>\n\n1️⃣ <b>${tasks[0].text}</b>\n2️⃣ Then: ${tasks[1]? tasks[1].text : "review your notes"}\n\nWhy: your nearest deadline is <b>${dls[0].title}</b> (in ${daysUntil(dls[0].date)} day${daysUntil(dls[0].date)===1?"":"s"}), and task 1 feeds directly into it. Small start beats perfect plan — tick it off in the Assignments tab.`;
+    } else html = "🎯 Everything in your checklists is done. Add a new assignment brief or deadline and I'll plan it for you!";
+  }
+  else if(q==="deadlines" || /\b(deadline|due|when|upcoming)\b/.test(t)){
+    html = dls.length
+      ? "⏰ <b>Your upcoming deadlines & classes:</b>\n\n" + dls.slice(0,6).map(d=>`• ${d.title} — ${new Date(d.date+"T00:00:00").toLocaleDateString("en-MY",{weekday:"long", day:"numeric", month:"short"})} (${daysUntil(d.date)===0?"today":"in "+daysUntil(d.date)+"d"})`).join("\n")
+      : "⏰ No upcoming deadlines — add one from the dashboard.";
+  }
+  else if(q==="group" || /\b(group|team|project member)\b/.test(t)){
+    const gt = state.groupProject.tasks;
+    const open = gt.filter(x=>!x.done);
+    html = `👥 <b>${state.groupProject.name}</b>: ${gt.length-open.length}/${gt.length} tasks done.\n\n` +
+      (open.length? "Still open:\n"+open.map(x=>`• ${x.desc} → ${x.who}`).join("\n")+"\n\nNudge the owners from the Group Projects tab, or reassign tasks there." : "All group tasks are done — nice teamwork! 🎉");
+  }
+  else if(q.length > 80 || /\b(brief|assignment|report|essay|analyse|analyze)\b/.test(t)){
+    $("asg-brief").value = q.length>40? q : $("asg-brief").value;
+    showView("assignments");
+    analyseBrief();
+    html = "📝 <b>I've analysed that brief for you.</b>\nCheck the summary and generated checklist in the Assignment Manager — it detected the requirements, deliverables and marking criteria, and built a prioritised task list.";
+  }
+  else {
+    html = `✨ Hi! I can help with:\n• <b>Paste an assignment brief</b> — I'll summarise it and build a task list\n• <b>"Plan my study week"</b> — personalised schedule from your deadlines & timetable\n• <b>"What should I do first?"</b> — prioritised recommendation\n• <b>"My upcoming deadlines"</b> — a quick rundown\n\nTip: I run fully offline in your browser.`;
+  }
+  box.innerHTML = html;
+  box.classList.add("show");
+  $("ai-input").value = "";
+}
+
+/* ---------- Boot ---------- */
+function renderAll(){
+  renderHero(); renderDeadlines(); renderChecklist(); renderPlanner();
+  renderGroup(); renderProfile(); renderProdChart(); renderDashStats();
+}
+load();
+state.assignments.forEach((a,i)=>{ if(!state.assignments[i].checklist) state.assignments[i].checklist=[]; });
+$("asg-title").value = activeAssignment().title;
+$("asg-brief").value = activeAssignment().brief;
+if(!state.plan.length) state.plan = buildPlan();
+renderAll();
+</script>
+</body>
+</html>
